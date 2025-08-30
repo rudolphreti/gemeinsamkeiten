@@ -1,0 +1,27 @@
+{
+  "entries": [
+    {"name": "Anna", "tags": "Lego,Lesen,Tiere"},
+    {"name": "Lukas", "tags": "Fußball,Games,Filme"},
+    {"name": "Leon", "tags": "Musik,Radfahren,Fußball"},
+    {"name": "Emma", "tags": "Tanz,Zeichnen,Lesen"},
+    {"name": "Elias", "tags": "Lego,Games,Schwimmen"},
+    {"name": "Marie", "tags": "Tiere,Musik,Kochen"},
+    {"name": "Felix", "tags": "Fußball,Schach,Filme"},
+    {"name": "Mia", "tags": "Zeichnen,Lesen,Tiere"},
+    {"name": "Daniel", "tags": "Games,Radfahren,Musik"},
+    {"name": "Laura", "tags": "Tanz,Kochen,Schwimmen"},
+    {"name": "Jakob", "tags": "Schach,Lego,Fußball"},
+    {"name": "Paul", "tags": "Filme,Wandern,Tiere"},
+    {"name": "Sarah", "tags": "Musik,Tanz,Lesen"},
+    {"name": "Leo", "tags": "Fußball,Games,Schwimmen"},
+    {"name": "Clara", "tags": "Zeichnen,Tiere,Radfahren"},
+    {"name": "Jonas", "tags": "Lego,Fußball,Musik"},
+    {"name": "Nina", "tags": "Tanz,Games,Schach"},
+    {"name": "Moritz", "tags": "Radfahren,Wandern,Tiere"},
+    {"name": "Lena", "tags": "Lesen,Kochen,Musik"},
+    {"name": "Max", "tags": "Fußball,Filme,Lego"},
+    {"name": "Sophie", "tags": "Zeichnen,Schwimmen,Musik"}
+  ],
+  "catalog": "[\"Filme\",\"Fußball\",\"Games\",\"Kochen\",\"Lego\",\"Lesen\",\"Musik\",\"Radfahren\",\"Schach\",\"Schwimmen\",\"Tanz\",\"Tiere\",\"Wandern\",\"Zeichnen\"]",
+  "context": "Interessen der Klasse 2e, Wien"
+}
