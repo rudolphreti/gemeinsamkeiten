@@ -1,7 +1,7 @@
 :root{--gap:16px;--fg:#222;--bg:#fff;--muted:#666}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;color:var(--fg);background:var(--bg)}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;color:var(--fg);background:var(--bg);display:flex;flex-direction:column;min-height:100%}
 .site-header{padding:16px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .site-header h1{margin:0;font-size:1.2rem}
 .menu-toggle{appearance:none;border:1px solid #cfd6dc;border-radius:10px;background:#f7f7f8;min-width:44px;min-height:44px;padding:8px 12px;cursor:pointer}
@@ -9,8 +9,8 @@ body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Hel
 .menu-panel{position:absolute;right:0;top:52px;background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px;min-width:260px;box-shadow:0 6px 18px rgba(0,0,0,.08);display:none;z-index:10}
 .menu-panel.open{display:block}
 .menu-panel .btn{width:100%;justify-content:flex-start}
-.grid{display:grid;gap:var(--gap);padding:20px}
-@media (min-width:980px){.grid{grid-template-columns:1.1fr 0.9fr;align-items:start}}
+.grid{display:grid;gap:var(--gap);padding:20px;flex:1;grid-template-columns:1fr;align-items:start}
+@media (min-width:980px){.grid{grid-template-columns:1.1fr 0.9fr;align-items:stretch}}
 
 .field{margin-bottom:12px}
 label{font-weight:600;margin-bottom:6px;display:block}
@@ -33,7 +33,9 @@ input[type="text"]{width:100%;padding:10px 12px;border:1px solid #cfd6dc;border-
 .names-list{list-style:disc;margin:6px 0 0 22px;padding:0}
 
 .cloud-title{margin:.25rem 0 .5rem;font-size:1.1rem}
-#cloud{display:block;width:100%;height:560px;border:1px dashed #e5e5e5;border-radius:12px;pointer-events:none}
+#cloudSection{display:flex;flex-direction:column;min-height:0}
+#cloudWrap{flex:1;min-height:0}
+#cloud{display:block;width:100%;height:100%;border:0;border-radius:12px;pointer-events:none}
 .cloud-fallback{list-style:none;margin:10px 0 0;padding:0;border:1px dashed #e5e5e5;border-radius:12px}
 .cloud-fallback li{padding:8px 12px;border-bottom:1px solid #f0f0f0}
 .cloud-fallback li:last-child{border-bottom:0}
@@ -54,7 +56,10 @@ summary{cursor:pointer;min-height:44px}
 .index-list li{display:flex;align-items:center;gap:6px;margin:0 0 6px}
 .index-btn{flex:1;text-align:left;padding:8px 10px;border:1px solid #e5e5e5;border-radius:10px;background:#fff;cursor:pointer}
 .index-btn.sel{background:#eaf6ff;border-color:#cfe8ff}
-.index-remove{background:none;border:0;color:#a00;font-size:1.1rem;cursor:pointer;line-height:1;padding:0 6px}
+#indexPanel .index-remove{background:none;border:0;color:#a00;font-size:1.1rem;cursor:pointer;line-height:1;padding:0 6px;display:none}
+#indexPanel.show-remove .index-remove{display:inline-block}
+#indexToggleWrap{display:flex;align-items:center;gap:4px;margin-left:auto;font-size:.9rem}
+#indexToggleWrap input{margin:0}
 
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
