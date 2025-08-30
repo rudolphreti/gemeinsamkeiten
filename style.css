@@ -1,0 +1,60 @@
+:root{--gap:16px;--fg:#222;--bg:#fff;--muted:#666}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;color:var(--fg);background:var(--bg)}
+.site-header{padding:16px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.site-header h1{margin:0;font-size:1.2rem}
+.menu-toggle{appearance:none;border:1px solid #cfd6dc;border-radius:10px;background:#f7f7f8;min-width:44px;min-height:44px;padding:8px 12px;cursor:pointer}
+.menu{position:relative}
+.menu-panel{position:absolute;right:0;top:52px;background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px;min-width:260px;box-shadow:0 6px 18px rgba(0,0,0,.08);display:none;z-index:10}
+.menu-panel.open{display:block}
+.menu-panel .btn{width:100%;justify-content:flex-start}
+.grid{display:grid;gap:var(--gap);padding:20px}
+@media (min-width:980px){.grid{grid-template-columns:1.1fr 0.9fr;align-items:start}}
+
+.field{margin-bottom:12px}
+label{font-weight:600;margin-bottom:6px;display:block}
+input[type="text"]{width:100%;padding:10px 12px;border:1px solid #cfd6dc;border-radius:10px;min-height:44px}
+.hint{color:var(--muted);margin:.25rem 0 0;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eef8f0;border:1px solid #d6f0db;font-size:.95rem}
+.chip button{border:0;background:transparent;cursor:pointer;font-size:1rem;line-height:1}
+.buttons{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.btn{appearance:none;border:1px solid #cfd6dc;border-radius:12px;padding:12px 16px;min-height:44px;min-width:44px;background:#f7f7f8;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:#f1f5f9}
+.btn-danger{border-color:#f1c1c1;background:#ffeaea;color:#7a1d1d}
+.warn{min-height:1.2em;color:#b35a00;margin:6px 0}
+
+.tag-list{list-style:none;padding:0;margin:10px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.tag-item{display:flex;align-items:center;gap:6px}
+.tag-btn{flex:1;text-align:left;padding:10px 12px;border:1px solid #e5e5e5;border-radius:10px;background:#fff;cursor:pointer;min-height:44px}
+.tag-count{color:var(--muted);font-weight:500}
+.names-wrap{margin-top:10px}
+.names-list{list-style:disc;margin:6px 0 0 22px;padding:0}
+
+.cloud-title{margin:.25rem 0 .5rem;font-size:1.1rem}
+#cloud{display:block;width:100%;height:560px;border:1px dashed #e5e5e5;border-radius:12px;pointer-events:none}
+.cloud-fallback{list-style:none;margin:10px 0 0;padding:0;border:1px dashed #e5e5e5;border-radius:12px}
+.cloud-fallback li{padding:8px 12px;border-bottom:1px solid #f0f0f0}
+.cloud-fallback li:last-child{border-bottom:0}
+.details{border:1px solid #e5e5e5;border-radius:12px;padding:8px}
+summary{cursor:pointer;min-height:44px}
+
+/* Fullscreen tag index overlay */
+#indexPanel{position:fixed;inset:0;background:#fff;z-index:50;display:none;flex-direction:column}
+#indexPanel.open{display:flex}
+#indexHeader{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #e5e5e5}
+#indexHeader h3{margin:0;font-size:1.05rem}
+#indexClose{margin-left:auto}
+#indexBody{padding:16px;overflow:auto;height:100%}
+.index-columns{column-width:240px;column-gap:18px}
+.index-section{break-inside:avoid;margin:0 0 16px}
+.index-section h4{margin:0 0 8px;font-size:.95rem;color:#555}
+.index-list{list-style:none;margin:0;padding:0}
+.index-list li{display:flex;align-items:center;gap:6px;margin:0 0 6px}
+.index-btn{flex:1;text-align:left;padding:8px 10px;border:1px solid #e5e5e5;border-radius:10px;background:#fff;cursor:pointer}
+.index-btn.sel{background:#eaf6ff;border-color:#cfe8ff}
+.index-remove{background:none;border:0;color:#a00;font-size:1.1rem;cursor:pointer;line-height:1;padding:0 6px}
+
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
