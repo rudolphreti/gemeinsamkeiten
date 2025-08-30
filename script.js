@@ -10,7 +10,7 @@
 
   let form, nameInput, addInput, selectedTagsBox, warnBox, tagList, namesTitle, namesList, cloudCanvas, cloudFallback;
   let importBtn, importFile, exportBtn, reportBtn, resetBtn, menuToggle, menuPanel, contextInput;
-  let openIndexBtn, indexPanel, indexClose, indexColumns;
+  let openIndexBtn, indexPanel, indexClose, indexColumns, indexToggleRemove;
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -37,6 +37,7 @@
     indexPanel = document.getElementById("indexPanel");
     indexClose = document.getElementById("indexClose");
     indexColumns = document.getElementById("indexColumns");
+    indexToggleRemove = document.getElementById("indexToggleRemove");
 
     const initialCatalog = (()=>{ try{ const a = JSON.parse(state.catalog); return Array.isArray(a) && a.length ? a : DEFAULT_CATALOG; }catch{ return DEFAULT_CATALOG; }})();
     renderIndex(initialCatalog);
@@ -70,6 +71,7 @@
     indexClose.addEventListener("click", closeIndex);
     indexPanel.addEventListener("click", (e)=>{ if(e.target===indexPanel) closeIndex(); });
     document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && indexPanel.classList.contains("open")) closeIndex(); });
+    indexToggleRemove.addEventListener("change", ()=>{ indexPanel.classList.toggle("show-remove", indexToggleRemove.checked); });
   }
 
   function toggleMenu(){ const open = !menuPanel.classList.contains("open"); menuPanel.classList.toggle("open", open); menuToggle.setAttribute("aria-expanded", String(open)); }
@@ -86,7 +88,16 @@
     const items = Array.from(new Set(arr.map(t=>String(t)))); items.sort((a,b)=> a.localeCompare(b, "de", {sensitivity:"base"})); indexColumns.innerHTML = "";
     const groups = new Map(); for(const t of items){ const l=(t[0]||"#").toUpperCase(); const g=/[A-ZÄÖÜ]/i.test(l)?l:"#"; if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(t); }
     for(const [letter,list] of groups){ const sec=document.createElement("section"); sec.className="index-section"; const h=document.createElement("h4"); h.textContent=letter; sec.appendChild(h); const ul=document.createElement("ul"); ul.className="index-list"; for(const tag of list){ const li=document.createElement("li"); const btn=document.createElement("button"); btn.type="button"; btn.className="index-btn"; btn.textContent=tag; btn.dataset.tag=tag; if(currentSelection.has(tag.toLowerCase())) btn.classList.add("sel"); btn.addEventListener("click", ()=>{ tryAddTag(tag); btn.classList.add("sel"); }); const del=document.createElement("button"); del.type="button"; del.className="index-remove"; del.setAttribute("title","Tag löschen"); del.textContent="×"; del.addEventListener("click", (e)=>{ e.stopPropagation(); removeFromCatalog(tag); }); li.appendChild(btn); li.appendChild(del); ul.appendChild(li);} sec.appendChild(ul); indexColumns.appendChild(sec);} }
-  function openIndex(){ try{ renderIndex(JSON.parse(state.catalog)); }catch{ renderIndex([]); } indexPanel.hidden=false; indexPanel.classList.add("open"); openIndexBtn.setAttribute("aria-expanded","true"); indexClose.focus(); requestAnimationFrame(()=>{ const sel=indexPanel.querySelector('.index-btn.sel'); if(sel) sel.scrollIntoView({block:'center'}); }); }
+  function openIndex(){
+    try{ renderIndex(JSON.parse(state.catalog)); }catch{ renderIndex([]); }
+    indexToggleRemove.checked=false;
+    indexPanel.classList.remove("show-remove");
+    indexPanel.hidden=false;
+    indexPanel.classList.add("open");
+    openIndexBtn.setAttribute("aria-expanded","true");
+    indexClose.focus();
+    requestAnimationFrame(()=>{ const sel=indexPanel.querySelector('.index-btn.sel'); if(sel) sel.scrollIntoView({block:'center'}); });
+  }
   function closeIndex(){ indexPanel.classList.remove("open"); indexPanel.hidden=true; openIndexBtn.setAttribute("aria-expanded","false"); openIndexBtn.focus(); }
 
   function tryAddTag(tag){ const clean=tag.trim(); if(!clean) return; const key=clean.toLowerCase(); if(currentSelection.has(key)) return; clearWarn(); currentSelection.set(key, currentSelection.get(key)||clean); renderSelectedChips(); if(indexPanel.classList.contains("open")) renderIndex(JSON.parse(state.catalog)); }
@@ -100,7 +111,7 @@
   function showNamesFor(lowerKey, display){ const { names } = aggregate(); const arr = names.get(lowerKey) || []; namesTitle.textContent = `${display} – ${arr.length} Personen`; namesList.innerHTML = ""; for(const n of arr){ const li=document.createElement("li"); li.textContent=n; namesList.appendChild(li);} namesTitle.tabIndex=-1; namesTitle.focus(); }
   function renderTagList(){ const { counts, displayMap } = aggregate(); const items=Array.from(counts.entries()).map(([k,v])=>({lower:k,count:v,display:displayMap.get(k)||k})); items.sort((a,b)=> b.count-a.count || a.display.localeCompare(b.display,"de",{sensitivity:"base"})); tagList.innerHTML=""; for(const it of items){ const li=document.createElement("li"); li.className="tag-item"; const btn=document.createElement("button"); btn.type="button"; btn.className="tag-btn"; btn.setAttribute("data-tag",it.lower); btn.setAttribute("data-display",it.display); btn.innerHTML=`<strong>${escapeHTML(it.display)}</strong> <span class="tag-count">– ${it.count}</span>`; li.appendChild(btn); tagList.appendChild(li);} }
 
-  function renderCloud(){ const { counts, displayMap } = aggregate(); const list=Array.from(counts.entries()).map(([k,v])=>[displayMap.get(k)||k, v]); const wrap=cloudCanvas.parentElement; const w=Math.max(360, wrap.clientWidth); const h=Math.max(400, Math.min(600, Math.round(w*0.7))); cloudCanvas.width=w; cloudCanvas.height=h; if(typeof WordCloud==="function" && list.length){ cloudFallback.hidden=true; cloudCanvas.hidden=false; try{ WordCloud(cloudCanvas,{ list, rotateRatio:0, weightFactor:s=>10+s*5, clearCanvas:true, backgroundColor:"#ffffff", shrinkToFit:true }); }catch{ renderCloudFallback(list); } } else { renderCloudFallback(list); } }
+  function renderCloud(){ const { counts, displayMap } = aggregate(); const list=Array.from(counts.entries()).map(([k,v])=>[displayMap.get(k)||k, v]); const wrap=cloudCanvas.parentElement; const w=wrap.clientWidth; const h=wrap.clientHeight; cloudCanvas.width=w; cloudCanvas.height=h; if(typeof WordCloud==="function" && list.length){ cloudFallback.hidden=true; cloudCanvas.hidden=false; try{ WordCloud(cloudCanvas,{ list, rotateRatio:0, weightFactor:s=>10+s*5, clearCanvas:true, backgroundColor:"#ffffff", shrinkToFit:true }); }catch{ renderCloudFallback(list); } } else { renderCloudFallback(list); } }
   function renderCloudFallback(list){ cloudCanvas.hidden=true; cloudFallback.hidden=false; cloudFallback.innerHTML=""; list.sort((a,b)=> b[1]-a[1] || String(a[0]).localeCompare(String(b[0]),"de",{sensitivity:"base"})); for(const [word,count] of list){ const li=document.createElement("li"); li.textContent=`${word} – ${count}`; cloudFallback.appendChild(li);} }
 
   function aggregate(){ const counts=new Map(), displayMap=new Map(), names=new Map(); for(const e of state.entries){ if(typeof e?.tags!=="string") continue; const seen=new Set(); for(const raw of e.tags.split(",")){ const t=raw.trim(); if(!t) continue; const k=t.toLowerCase(); if(!displayMap.has(k)) displayMap.set(k,t); if(!seen.has(k)){ counts.set(k,(counts.get(k)||0)+1); seen.add(k);} const arr=names.get(k)||[]; arr.push(e.name); names.set(k,arr);} } return { counts, displayMap, names }; }
