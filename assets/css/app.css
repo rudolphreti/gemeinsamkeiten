@@ -1,0 +1,45 @@
+﻿:root{
+  --cloud-height: 560px;
+}
+
+#cloud{
+  height: var(--cloud-height);
+}
+
+#cloudFallback{
+  max-height: var(--cloud-height);
+  overflow: auto;
+}
+
+.index-columns{
+  column-width: 240px;
+  column-gap: 18px;
+}
+
+.index-section{
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+
+.index-section h4{
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.index-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.index-list li{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.index-btn{
+  flex: 1 1 auto;
+}

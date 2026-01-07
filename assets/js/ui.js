@@ -1,0 +1,235 @@
+﻿function getRefs(){
+  return {
+    form: document.getElementById("entryForm"),
+    nameInput: document.getElementById("nameInput"),
+    addInput: document.getElementById("addInput"),
+    selectedTagsBox: document.getElementById("selectedTags"),
+    notice: document.getElementById("notice"),
+    tagList: document.getElementById("tagList"),
+    namesTitle: document.getElementById("namesTitle"),
+    namesList: document.getElementById("namesList"),
+    cloudCanvas: document.getElementById("cloud"),
+    cloudFallback: document.getElementById("cloudFallback"),
+    importBtn: document.getElementById("importBtn"),
+    importFile: document.getElementById("importFile"),
+    exportBtn: document.getElementById("exportBtn"),
+    reportBtn: document.getElementById("reportBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    menuToggle: document.getElementById("menuToggle"),
+    menuPanel: document.getElementById("menuPanel"),
+    contextInput: document.getElementById("contextInput"),
+    openIndexBtn: document.getElementById("openIndexBtn"),
+    indexPanel: document.getElementById("indexPanel"),
+    indexClose: document.getElementById("indexClose"),
+    indexColumns: document.getElementById("indexColumns")
+  };
+}
+
+function setMenuOpen(refs, open){
+  refs.menuPanel.classList.toggle("show", open);
+  refs.menuToggle.setAttribute("aria-expanded", String(open));
+}
+
+function setIndexOpen(refs, open){
+  refs.indexPanel.hidden = !open;
+  refs.indexPanel.classList.toggle("d-none", !open);
+  refs.indexPanel.classList.toggle("d-flex", open);
+  refs.openIndexBtn.setAttribute("aria-expanded", String(open));
+}
+
+function setNotice(refs, text){
+  refs.notice.replaceChildren();
+  if(!text){
+    refs.notice.classList.add("d-none");
+    return;
+  }
+  refs.notice.textContent = text;
+  refs.notice.classList.remove("d-none");
+}
+
+function setNoticeWithLink(refs, prefix, link, suffix){
+  refs.notice.replaceChildren();
+  refs.notice.classList.remove("d-none");
+  if(prefix) refs.notice.append(document.createTextNode(prefix));
+  const anchor = document.createElement("a");
+  anchor.href = link.href;
+  anchor.download = link.download || "";
+  anchor.rel = "noopener";
+  anchor.textContent = link.text;
+  refs.notice.append(anchor);
+  if(suffix) refs.notice.append(document.createTextNode(suffix));
+}
+
+function focusName(refs){
+  refs.nameInput.focus();
+}
+
+function renderSelectedTags(refs, selection){
+  refs.selectedTagsBox.replaceChildren();
+  for(const display of selection.values()){
+    const chip = document.createElement("span");
+    chip.className = "badge text-bg-success d-inline-flex align-items-center gap-1 pe-2";
+
+    const label = document.createElement("span");
+    label.textContent = display;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-close btn-close-white ms-1";
+    btn.setAttribute("aria-label", `Entfernen ${display}`);
+    btn.dataset.action = "remove-selected";
+    btn.dataset.tag = display;
+
+    chip.append(label, btn);
+    refs.selectedTagsBox.appendChild(chip);
+  }
+}
+
+function renderIndex(refs, catalog, selection){
+  refs.indexColumns.replaceChildren();
+  const items = Array.from(new Set(catalog.map((tag)=> String(tag))));
+  items.sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
+
+  const groups = new Map();
+  for(const tag of items){
+    const letter = (tag[0] || "#").toUpperCase();
+    const group = /[A-Z]/.test(letter) ? letter : "#";
+    if(!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(tag);
+  }
+
+  for(const [letter, list] of groups){
+    const section = document.createElement("section");
+    section.className = "index-section";
+
+    const heading = document.createElement("h4");
+    heading.textContent = letter;
+    section.appendChild(heading);
+
+    const ul = document.createElement("ul");
+    ul.className = "index-list";
+
+    for(const tag of list){
+      const li = document.createElement("li");
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn btn-sm btn-outline-secondary text-start index-btn";
+      addBtn.textContent = tag;
+      addBtn.dataset.action = "add-index";
+      addBtn.dataset.tag = tag;
+      if(selection.has(tag.toLowerCase())) addBtn.classList.add("active");
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-sm btn-outline-danger";
+      removeBtn.textContent = "-";
+      removeBtn.setAttribute("title", "Tag löschen");
+      removeBtn.dataset.action = "remove-index";
+      removeBtn.dataset.tag = tag;
+
+      li.append(addBtn, removeBtn);
+      ul.appendChild(li);
+    }
+
+    section.appendChild(ul);
+    refs.indexColumns.appendChild(section);
+  }
+}
+
+function renderTagList(refs, items){
+  refs.tagList.replaceChildren();
+  for(const item of items){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+    btn.dataset.action = "show-names";
+    btn.dataset.tag = item.lower;
+    btn.dataset.display = item.display;
+
+    const label = document.createElement("span");
+    label.className = "fw-semibold";
+    label.textContent = item.display;
+
+    const badge = document.createElement("span");
+    badge.className = "badge text-bg-secondary rounded-pill";
+    badge.textContent = String(item.count);
+
+    btn.append(label, badge);
+    refs.tagList.appendChild(btn);
+  }
+}
+
+function renderNamesList(refs, display, names){
+  refs.namesTitle.textContent = `${display} - ${names.length} Personen`;
+  refs.namesList.replaceChildren();
+  for(const name of names){
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    li.textContent = name;
+    refs.namesList.appendChild(li);
+  }
+  refs.namesTitle.tabIndex = -1;
+  refs.namesTitle.focus();
+}
+
+function renderCloud(refs, list){
+  const wrap = refs.cloudCanvas.parentElement;
+  const width = Math.max(360, wrap.clientWidth);
+  const height = Math.max(400, Math.min(600, Math.round(width * 0.7)));
+  refs.cloudCanvas.width = width;
+  refs.cloudCanvas.height = height;
+
+  if(typeof window.WordCloud === "function" && list.length){
+    refs.cloudFallback.classList.add("d-none");
+    refs.cloudCanvas.classList.remove("d-none");
+    try{
+      window.WordCloud(refs.cloudCanvas, {
+        list,
+        rotateRatio: 0,
+        weightFactor: (size)=> 10 + size * 5,
+        clearCanvas: true,
+        backgroundColor: "#ffffff",
+        shrinkToFit: true
+      });
+    }catch{
+      renderCloudFallback(refs, list);
+    }
+  }else{
+    renderCloudFallback(refs, list);
+  }
+}
+
+function renderCloudFallback(refs, list){
+  refs.cloudCanvas.classList.add("d-none");
+  refs.cloudFallback.classList.remove("d-none");
+  refs.cloudFallback.replaceChildren();
+  list
+    .slice()
+    .sort((a,b)=> b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), "de", { sensitivity: "base" }))
+    .forEach(([word, count])=>{
+      const li = document.createElement("li");
+      li.className = "list-group-item d-flex justify-content-between align-items-center";
+      const label = document.createElement("span");
+      label.textContent = word;
+      const badge = document.createElement("span");
+      badge.className = "badge text-bg-secondary rounded-pill";
+      badge.textContent = String(count);
+      li.append(label, badge);
+      refs.cloudFallback.appendChild(li);
+    });
+}
+
+export {
+  getRefs,
+  setMenuOpen,
+  setIndexOpen,
+  setNotice,
+  setNoticeWithLink,
+  focusName,
+  renderSelectedTags,
+  renderIndex,
+  renderTagList,
+  renderNamesList,
+  renderCloud
+};
