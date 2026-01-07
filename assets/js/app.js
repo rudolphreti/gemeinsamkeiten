@@ -1,10 +1,14 @@
-﻿import { loadState, saveState, resetState, getDefaultCatalog } from "./storage.js";
+import { loadState, saveState, resetState, getDefaultCatalog } from "./storage.js";
 import {
   normalizeTag,
+  normalizeName,
   parseCatalog,
   addToCatalog,
   removeFromCatalog,
   aggregateEntries,
+  getPersonNames,
+  getPersonTags,
+  updatePersonEntries,
   buildEntry,
   buildExportFilename,
   buildReportText
@@ -13,20 +17,26 @@ import {
   getRefs,
   setMenuOpen,
   setIndexOpen,
+  setPersonsOpen,
   setNotice,
   setNoticeWithLink,
+  setPersonNotice,
   focusName,
   renderSelectedTags,
   renderIndex,
   renderTagList,
   renderNamesList,
-  renderCloud
+  renderCloud,
+  renderPersonsSelect,
+  renderPersonTags,
+  renderPersonsCatalog
 } from "./ui.js";
 import { debounce } from "./utils.js";
 
 const refs = getRefs();
 let state = loadState();
 let currentSelection = new Map();
+let currentPerson = { original: "", name: "", tags: new Map() };
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -75,8 +85,24 @@ function bindEvents(){
   });
   refs.indexColumns.addEventListener("click", onIndexClick);
 
+  refs.personsBtn.addEventListener("click", openPersons);
+  refs.personsClose.addEventListener("click", closePersons);
+  refs.personsPanel.addEventListener("click", (event)=>{
+    if(event.target === refs.personsPanel) closePersons();
+  });
+  refs.personsSelect.addEventListener("change", onPersonSelectChange);
+  refs.personNameInput.addEventListener("input", onPersonNameInput);
+  refs.personsCatalog.addEventListener("click", onPersonCatalogClick);
+  refs.personTags.addEventListener("click", onPersonTagsClick);
+  refs.personSaveBtn.addEventListener("click", onPersonSave);
+
   document.addEventListener("keydown", (event)=>{
-    if(event.key === "Escape" && !refs.indexPanel.classList.contains("d-none")){
+    if(event.key !== "Escape") return;
+    if(!refs.personsPanel.classList.contains("d-none")){
+      closePersons();
+      return;
+    }
+    if(!refs.indexPanel.classList.contains("d-none")){
       closeIndex();
     }
   });
@@ -121,6 +147,51 @@ function closeIndex(){
   refs.openIndexBtn.focus();
 }
 
+function openPersons(){
+  setMenuOpen(refs, false);
+  setPersonsOpen(refs, true);
+  refreshPersonsOverlay(currentPerson.name);
+  refs.personsSelect.focus();
+}
+
+function closePersons(){
+  setPersonsOpen(refs, false);
+  setPersonNotice(refs, "");
+  refs.menuToggle.focus();
+}
+
+function refreshPersonsOverlay(preferredName){
+  const names = getPersonNames(state.entries);
+  const selected = renderPersonsSelect(refs, names, preferredName);
+  currentPerson = createPersonDraft(selected);
+  renderPersonDetails();
+}
+
+function createPersonDraft(name){
+  const clean = normalizeName(name);
+  const tags = new Map();
+  if(clean){
+    for(const tag of getPersonTags(state.entries, clean)){
+      tags.set(tag.toLowerCase(), tag);
+    }
+  }
+  return { original: clean, name: clean, tags };
+}
+
+function renderPersonDetails(){
+  const hasPerson = Boolean(currentPerson.name);
+  refs.personNameInput.disabled = !hasPerson;
+  refs.personSaveBtn.disabled = !hasPerson;
+  refs.personNameInput.value = currentPerson.name;
+  renderPersonTags(refs, currentPerson.tags);
+  renderPersonsCatalog(refs, getCatalogList(), currentPerson.tags);
+  if(!hasPerson){
+    setPersonNotice(refs, "Keine Personen vorhanden.");
+  }else{
+    setPersonNotice(refs, "");
+  }
+}
+
 function onAddEnter(event){
   if(event.key !== "Enter") return;
   event.preventDefault();
@@ -133,6 +204,9 @@ function onAddEnter(event){
     updateCatalog(nextCatalog);
     if(!refs.indexPanel.classList.contains("d-none")){
       renderIndex(refs, nextCatalog, currentSelection);
+    }
+    if(!refs.personsPanel.classList.contains("d-none")){
+      renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
     }
   }
 
@@ -188,6 +262,7 @@ function onSave(event){
   saveState(state);
   clearForm();
   renderAllSummaries();
+  refreshPersonsOverlay(name);
   focusName(refs);
 }
 
@@ -226,6 +301,9 @@ function onIndexClick(event){
       updateCatalog(nextCatalog);
       renderIndex(refs, nextCatalog, currentSelection);
       renderAllSummaries();
+      if(!refs.personsPanel.classList.contains("d-none")){
+        renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
+      }
       setNotice(refs, `Tag "${tag}" entfernt.`);
     }
   }
@@ -298,6 +376,7 @@ function onImport(event){
       renderIndex(refs, getCatalogList(), currentSelection);
       renderAllSummaries();
       refs.contextInput.value = state.context || "";
+      refreshPersonsOverlay(currentPerson.name);
       setNotice(refs, "Daten importiert.");
       focusName(refs);
     }catch{
@@ -332,7 +411,67 @@ function onReset(){
   renderAllSummaries();
   refs.namesTitle.textContent = "Wähle einen Tag, um die Namen zu sehen";
   refs.namesList.replaceChildren();
+  refreshPersonsOverlay("");
   setNotice(refs, "Zurückgesetzt.");
   focusName(refs);
   refs.contextInput.value = "";
+}
+
+function onPersonSelectChange(){
+  currentPerson = createPersonDraft(refs.personsSelect.value);
+  renderPersonDetails();
+}
+
+function onPersonNameInput(){
+  currentPerson.name = normalizeName(refs.personNameInput.value);
+  setPersonNotice(refs, "");
+}
+
+function onPersonCatalogClick(event){
+  const btn = event.target.closest("[data-action='add-person-tag']");
+  if(!btn) return;
+  addPersonTag(btn.dataset.tag);
+}
+
+function onPersonTagsClick(event){
+  const btn = event.target.closest("[data-action='remove-person-tag']");
+  if(!btn) return;
+  removePersonTag(btn.dataset.tag);
+}
+
+function addPersonTag(tag){
+  const clean = normalizeTag(tag);
+  if(!clean) return;
+  const key = clean.toLowerCase();
+  if(currentPerson.tags.has(key)) return;
+  currentPerson.tags.set(key, clean);
+  renderPersonTags(refs, currentPerson.tags);
+  renderPersonsCatalog(refs, getCatalogList(), currentPerson.tags);
+}
+
+function removePersonTag(tag){
+  const key = normalizeTag(tag).toLowerCase();
+  if(!currentPerson.tags.has(key)) return;
+  currentPerson.tags.delete(key);
+  renderPersonTags(refs, currentPerson.tags);
+  renderPersonsCatalog(refs, getCatalogList(), currentPerson.tags);
+}
+
+function onPersonSave(){
+  if(!currentPerson.original){
+    setPersonNotice(refs, "Keine Person ausgewählt.");
+    return;
+  }
+  const nextName = normalizeName(refs.personNameInput.value);
+  if(!nextName){
+    setPersonNotice(refs, "Name ist erforderlich.");
+    refs.personNameInput.focus();
+    return;
+  }
+  const tags = Array.from(currentPerson.tags.values());
+  state.entries = updatePersonEntries(state.entries, currentPerson.original, nextName, tags);
+  saveState(state);
+  renderAllSummaries();
+  setPersonNotice(refs, "Änderungen gespeichert.");
+  refreshPersonsOverlay(nextName);
 }

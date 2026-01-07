@@ -15,13 +15,22 @@
     exportBtn: document.getElementById("exportBtn"),
     reportBtn: document.getElementById("reportBtn"),
     resetBtn: document.getElementById("resetBtn"),
+    personsBtn: document.getElementById("personsBtn"),
     menuToggle: document.getElementById("menuToggle"),
     menuPanel: document.getElementById("menuPanel"),
     contextInput: document.getElementById("contextInput"),
     openIndexBtn: document.getElementById("openIndexBtn"),
     indexPanel: document.getElementById("indexPanel"),
     indexClose: document.getElementById("indexClose"),
-    indexColumns: document.getElementById("indexColumns")
+    indexColumns: document.getElementById("indexColumns"),
+    personsPanel: document.getElementById("personsPanel"),
+    personsClose: document.getElementById("personsClose"),
+    personsSelect: document.getElementById("personsSelect"),
+    personsCatalog: document.getElementById("personsCatalog"),
+    personNameInput: document.getElementById("personNameInput"),
+    personTags: document.getElementById("personTags"),
+    personSaveBtn: document.getElementById("personSaveBtn"),
+    personNotice: document.getElementById("personNotice")
   };
 }
 
@@ -35,6 +44,13 @@ function setIndexOpen(refs, open){
   refs.indexPanel.classList.toggle("d-none", !open);
   refs.indexPanel.classList.toggle("d-flex", open);
   refs.openIndexBtn.setAttribute("aria-expanded", String(open));
+}
+
+function setPersonsOpen(refs, open){
+  refs.personsPanel.hidden = !open;
+  refs.personsPanel.classList.toggle("d-none", !open);
+  refs.personsPanel.classList.toggle("d-flex", open);
+  refs.personsBtn.setAttribute("aria-expanded", String(open));
 }
 
 function setNotice(refs, text){
@@ -58,6 +74,16 @@ function setNoticeWithLink(refs, prefix, link, suffix){
   anchor.textContent = link.text;
   refs.notice.append(anchor);
   if(suffix) refs.notice.append(document.createTextNode(suffix));
+}
+
+function setPersonNotice(refs, text){
+  refs.personNotice.replaceChildren();
+  if(!text){
+    refs.personNotice.classList.add("d-none");
+    return;
+  }
+  refs.personNotice.textContent = text;
+  refs.personNotice.classList.remove("d-none");
 }
 
 function focusName(refs){
@@ -220,16 +246,102 @@ function renderCloudFallback(refs, list){
     });
 }
 
+function renderPersonsSelect(refs, names, selected){
+  refs.personsSelect.replaceChildren();
+  if(!names.length){
+    const option = document.createElement("option");
+    option.textContent = "Keine Personen vorhanden.";
+    option.value = "";
+    option.disabled = true;
+    option.selected = true;
+    refs.personsSelect.appendChild(option);
+    refs.personsSelect.disabled = true;
+    return "";
+  }
+
+  refs.personsSelect.disabled = false;
+  let selectedValue = "";
+  const selectedLower = String(selected || "").toLowerCase();
+
+  for(const name of names){
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    if(!selectedValue){
+      option.selected = true;
+      selectedValue = name;
+    }
+    if(selectedLower && name.toLowerCase() === selectedLower){
+      option.selected = true;
+      selectedValue = name;
+    }
+    refs.personsSelect.appendChild(option);
+  }
+
+  return selectedValue;
+}
+
+function renderPersonTags(refs, tags){
+  refs.personTags.replaceChildren();
+  if(!tags.size){
+    const text = document.createElement("span");
+    text.className = "text-muted";
+    text.textContent = "Keine Tags zugewiesen.";
+    refs.personTags.appendChild(text);
+    return;
+  }
+
+  for(const tag of tags.values()){
+    const chip = document.createElement("span");
+    chip.className = "badge text-bg-secondary d-inline-flex align-items-center gap-1 pe-2";
+
+    const label = document.createElement("span");
+    label.textContent = tag;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-close btn-close-white ms-1";
+    btn.setAttribute("aria-label", `Entfernen ${tag}`);
+    btn.dataset.action = "remove-person-tag";
+    btn.dataset.tag = tag;
+
+    chip.append(label, btn);
+    refs.personTags.appendChild(chip);
+  }
+}
+
+function renderPersonsCatalog(refs, catalog, selectedTags){
+  refs.personsCatalog.replaceChildren();
+  for(const tag of catalog){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-sm btn-outline-secondary";
+    btn.textContent = tag;
+    btn.dataset.action = "add-person-tag";
+    btn.dataset.tag = tag;
+    if(selectedTags.has(tag.toLowerCase())){
+      btn.classList.add("active");
+      btn.disabled = true;
+    }
+    refs.personsCatalog.appendChild(btn);
+  }
+}
+
 export {
   getRefs,
   setMenuOpen,
   setIndexOpen,
+  setPersonsOpen,
   setNotice,
   setNoticeWithLink,
+  setPersonNotice,
   focusName,
   renderSelectedTags,
   renderIndex,
   renderTagList,
   renderNamesList,
-  renderCloud
+  renderCloud,
+  renderPersonsSelect,
+  renderPersonTags,
+  renderPersonsCatalog
 };

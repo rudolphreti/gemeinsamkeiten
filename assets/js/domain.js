@@ -1,4 +1,8 @@
-﻿function normalizeTag(raw){
+function normalizeTag(raw){
+  return String(raw ?? "").trim();
+}
+
+function normalizeName(raw){
   return String(raw ?? "").trim();
 }
 
@@ -58,6 +62,57 @@ function aggregateEntries(entries){
   return { counts, displayMap, names };
 }
 
+function getPersonNames(entries){
+  const names = new Set();
+  for(const entry of entries){
+    if(typeof entry?.name !== "string") continue;
+    const name = normalizeName(entry.name);
+    if(name) names.add(name);
+  }
+  return Array.from(names).sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
+}
+
+function getPersonTags(entries, name){
+  const target = normalizeName(name);
+  const tags = new Map();
+  if(!target) return [];
+  const targetKey = target.toLowerCase();
+
+  for(const entry of entries){
+    if(typeof entry?.name !== "string" || typeof entry?.tags !== "string") continue;
+    const entryName = normalizeName(entry.name);
+    if(entryName.toLowerCase() !== targetKey) continue;
+    for(const rawTag of entry.tags.split(",")){
+      const tag = normalizeTag(rawTag);
+      if(!tag) continue;
+      const key = tag.toLowerCase();
+      if(!tags.has(key)) tags.set(key, tag);
+    }
+  }
+
+  return Array.from(tags.values()).sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
+}
+
+function updatePersonEntries(entries, oldName, newName, tags){
+  const current = normalizeName(oldName);
+  const nextName = normalizeName(newName);
+  if(!current || !nextName) return entries;
+
+  const oldKey = current.toLowerCase();
+  const newKey = nextName.toLowerCase();
+  const tagString = tags.map(normalizeTag).filter(Boolean).join(",");
+
+  return entries.map((entry)=>{
+    if(typeof entry?.name !== "string" || typeof entry?.tags !== "string") return entry;
+    const entryName = normalizeName(entry.name);
+    const entryKey = entryName.toLowerCase();
+    if(entryKey === oldKey || entryKey === newKey){
+      return { ...entry, name: nextName, tags: tagString };
+    }
+    return entry;
+  });
+}
+
 function buildEntry(name, selectedTags){
   return { name, tags: selectedTags.join(",") };
 }
@@ -92,11 +147,15 @@ function buildReportText(state, aggregates){
 
 export {
   normalizeTag,
+  normalizeName,
   parseCatalog,
   sortCatalog,
   addToCatalog,
   removeFromCatalog,
   aggregateEntries,
+  getPersonNames,
+  getPersonTags,
+  updatePersonEntries,
   buildEntry,
   buildExportFilename,
   buildReportText
