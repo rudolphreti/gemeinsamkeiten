@@ -214,7 +214,7 @@ function renderNamesList(refs, display, names){
   refs.namesTitle.focus();
 }
 
-function renderCatalogList(refs, items){
+function renderCatalogList(refs, items, editing){
   refs.catalogList.replaceChildren();
   const list = items.slice().sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
   if(!list.length){
@@ -225,9 +225,44 @@ function renderCatalogList(refs, items){
     return;
   }
 
+  const editingKey = editing?.tagKey || "";
+  const editingValue = editing?.value || "";
   for(const word of list){
     const row = document.createElement("div");
     row.className = "list-group-item d-flex justify-content-between align-items-center";
+
+    const wordKey = word.toLowerCase();
+    if(editingKey && wordKey === editingKey){
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control form-control-sm";
+      input.value = editingValue || word;
+      input.dataset.action = "edit-input";
+      input.dataset.tag = word;
+      input.setAttribute("aria-label", `Wort bearbeiten: ${word}`);
+
+      const actions = document.createElement("div");
+      actions.className = "d-flex gap-2";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "btn btn-sm btn-primary";
+      saveBtn.textContent = "Speichern";
+      saveBtn.dataset.action = "save-catalog";
+      saveBtn.dataset.tag = word;
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "btn btn-sm btn-outline-secondary";
+      cancelBtn.textContent = "Abbrechen";
+      cancelBtn.dataset.action = "cancel-catalog";
+      cancelBtn.dataset.tag = word;
+
+      actions.append(saveBtn, cancelBtn);
+      row.append(input, actions);
+      refs.catalogList.appendChild(row);
+      continue;
+    }
 
     const label = document.createElement("span");
     label.textContent = word;

@@ -43,6 +43,7 @@ const refs = getRefs();
 let state = loadState();
 let currentSelection = new Map();
 let currentPerson = { original: "", name: "", tags: new Map() };
+let editingCatalog = { tagKey: "", value: "" };
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -101,6 +102,7 @@ function bindEvents(){
   refs.catalogAddBtn.addEventListener("click", onCatalogAdd);
   refs.catalogInput.addEventListener("keydown", onCatalogInputKeydown);
   refs.catalogList.addEventListener("click", onCatalogListClick);
+  refs.catalogList.addEventListener("input", onCatalogListInput);
 
   refs.personsBtn.addEventListener("click", openPersons);
   refs.personsClose.addEventListener("click", closePersons);
@@ -390,6 +392,15 @@ function onCatalogAdd(){
   refs.catalogInput.focus();
 }
 
+function onCatalogListInput(event){
+  const input = event.target.closest("[data-action='edit-input']");
+  if(!input) return;
+  editingCatalog = {
+    tagKey: (input.dataset.tag || "").toLowerCase(),
+    value: input.value
+  };
+}
+
 function onCatalogListClick(event){
   const btn = event.target.closest("[data-action]");
   if(!btn) return;
@@ -412,23 +423,50 @@ function onCatalogListClick(event){
   }
 
   if(btn.dataset.action === "edit-catalog"){
-    editCatalogItem(tag);
+    startCatalogEdit(tag);
+    return;
+  }
+
+  if(btn.dataset.action === "save-catalog"){
+    saveCatalogEdit(tag);
+    return;
+  }
+
+  if(btn.dataset.action === "cancel-catalog"){
+    cancelCatalogEdit();
   }
 }
 
-function editCatalogItem(tag){
-  const nextValue = window.prompt("Wort bearbeiten:", tag);
-  if(nextValue === null) return;
+function startCatalogEdit(tag){
+  editingCatalog = { tagKey: tag.toLowerCase(), value: tag };
+  renderCatalogList(refs, getCatalogList(), editingCatalog);
+  requestAnimationFrame(()=>{
+    const input = refs.catalogList.querySelector("[data-action='edit-input']");
+    if(input){
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  });
+}
+
+function saveCatalogEdit(tag){
+  const nextValue = editingCatalog.value.trim();
+  if(!nextValue){
+    setNotice(refs, "Wort darf nicht leer sein.");
+    return;
+  }
   const catalog = getCatalogList();
   const nextCatalog = renameCatalogItem(catalog, tag, nextValue);
   if(nextCatalog === catalog){
     setNotice(refs, "Keine Änderung vorgenommen.");
+    cancelCatalogEdit();
     return;
   }
   state.entries = updateEntriesForTag(state.entries, tag, nextValue);
   updateCatalog(nextCatalog);
   saveState(state);
   updateSelectionsForTag(tag, nextValue);
+  cancelCatalogEdit();
   renderAllSummaries();
   if(!refs.indexPanel.classList.contains("d-none")){
     renderIndex(refs, nextCatalog, currentSelection);
@@ -439,11 +477,19 @@ function editCatalogItem(tag){
   setNotice(refs, `Tag "${tag}" aktualisiert.`);
 }
 
+function cancelCatalogEdit(){
+  editingCatalog = { tagKey: "", value: "" };
+  renderCatalogList(refs, getCatalogList(), editingCatalog);
+}
+
 function updateSelectionsForTag(currentTag, nextTag){
   const oldKey = normalizeTag(currentTag).toLowerCase();
   const nextClean = normalizeTag(nextTag);
   if(!oldKey || !nextClean) return;
   const nextKey = nextClean.toLowerCase();
+  if(editingCatalog.tagKey === oldKey){
+    editingCatalog = { tagKey: "", value: "" };
+  }
   if(currentSelection.has(oldKey)){
     currentSelection.delete(oldKey);
     currentSelection.set(nextKey, nextClean);
@@ -472,7 +518,7 @@ function renderAllSummaries(){
   items.sort((a,b)=> b.count - a.count || a.display.localeCompare(b.display, "de", { sensitivity: "base" }));
 
   renderTagList(refs, items);
-  renderCatalogList(refs, getCatalogList());
+  renderCatalogList(refs, getCatalogList(), editingCatalog);
 
   const cloudList = Array.from(aggregates.counts.entries()).map(([key, count])=>[
     aggregates.displayMap.get(key) || key,
