@@ -519,7 +519,7 @@ function renderAllSummaries(){
     count,
     display: aggregates.displayMap.get(key) || key
   }));
-  items.sort((a,b)=> b.count - a.count || a.display.localeCompare(b.display, "de", { sensitivity: "base" }));
+  items.sort((a,b)=> a.display.localeCompare(b.display, "de", { sensitivity: "base" }));
 
   renderTagList(refs, items);
   renderCatalogList(refs, getCatalogList(), editingCatalog);

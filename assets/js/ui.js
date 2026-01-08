@@ -213,7 +213,8 @@ function renderTagList(refs, items){
 function renderNamesList(refs, display, names){
   refs.namesTitle.textContent = `${display} - ${names.length} Personen`;
   refs.namesList.replaceChildren();
-  for(const name of names){
+  const sortedNames = names.slice().sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
+  for(const name of sortedNames){
     const li = document.createElement("li");
     li.className = "list-group-item";
     li.textContent = name;
