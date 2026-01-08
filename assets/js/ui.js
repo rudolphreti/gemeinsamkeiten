@@ -43,6 +43,15 @@
 }
 
 function setMenuOpen(refs, open){
+  if(refs.menuOffcanvas){
+    if(open){
+      refs.menuOffcanvas.show();
+    }else{
+      refs.menuOffcanvas.hide();
+    }
+    refs.menuToggle.setAttribute("aria-expanded", String(open));
+    return;
+  }
   refs.menuPanel.classList.toggle("show", open);
   refs.menuToggle.setAttribute("aria-expanded", String(open));
 }

@@ -48,6 +48,15 @@ let editingCatalog = { tagKey: "", value: "" };
 document.addEventListener("DOMContentLoaded", init);
 
 function init(){
+  if(window.bootstrap?.Offcanvas){
+    refs.menuOffcanvas = window.bootstrap.Offcanvas.getOrCreateInstance(refs.menuPanel);
+    refs.menuPanel.addEventListener("shown.bs.offcanvas", ()=>{
+      refs.menuToggle.setAttribute("aria-expanded", "true");
+    });
+    refs.menuPanel.addEventListener("hidden.bs.offcanvas", ()=>{
+      refs.menuToggle.setAttribute("aria-expanded", "false");
+    });
+  }
   const catalog = ensureCatalog();
   renderIndex(refs, catalog, currentSelection);
   bindEvents();
@@ -75,11 +84,6 @@ function bindEvents(){
   window.addEventListener("resize", debounce(renderAllSummaries, 200));
 
   refs.menuToggle.addEventListener("click", toggleMenu);
-  document.addEventListener("click", (event)=>{
-    if(!refs.menuPanel.contains(event.target) && event.target !== refs.menuToggle){
-      setMenuOpen(refs, false);
-    }
-  });
 
   refs.contextInput.addEventListener("input", ()=>{
     state.context = refs.contextInput.value.trim();
