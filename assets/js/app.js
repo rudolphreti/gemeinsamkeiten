@@ -330,23 +330,12 @@ function onIndexClick(event){
 
   const tag = btn.dataset.tag || "";
   if(btn.dataset.action === "add-index"){
-    tryAddTag(tag);
-    btn.classList.add("active");
-    return;
-  }
-
-  if(btn.dataset.action === "remove-index"){
-    const catalog = getCatalogList();
-    const nextCatalog = removeFromCatalog(catalog, tag);
-    if(nextCatalog !== catalog){
-      updateCatalog(nextCatalog);
-      renderIndex(refs, nextCatalog, currentSelection);
-      renderAllSummaries();
-      if(!refs.personsPanel.classList.contains("d-none")){
-        renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
-      }
-      setNotice(refs, `Tag "${tag}" entfernt.`);
+    const key = normalizeTag(tag).toLowerCase();
+    if(currentSelection.has(key)){
+      removeTag(tag);
+      return;
     }
+    tryAddTag(tag);
   }
 }
 

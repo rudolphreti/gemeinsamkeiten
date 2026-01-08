@@ -170,15 +170,7 @@ function renderIndex(refs, catalog, selection){
       addBtn.dataset.tag = tag;
       if(selection.has(tag.toLowerCase())) addBtn.classList.add("active");
 
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "btn btn-sm btn-outline-danger";
-      removeBtn.textContent = "-";
-      removeBtn.setAttribute("title", "Tag löschen");
-      removeBtn.dataset.action = "remove-index";
-      removeBtn.dataset.tag = tag;
-
-      li.append(addBtn, removeBtn);
+      li.append(addBtn);
       ul.appendChild(li);
     }
 
