@@ -14,6 +14,7 @@
       <div class="dropdown">
         <button id="menuToggle" class="btn btn-outline-secondary dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menuPanel" title="Menü">Menü</button>
         <div id="menuPanel" class="dropdown-menu dropdown-menu-end" role="menu" aria-label="Aktionen">
+          <button type="button" id="wordsBtn" class="dropdown-item" role="menuitem">Wörter</button>
           <button type="button" id="personsBtn" class="dropdown-item" role="menuitem">Personen</button>
           <button type="button" id="exportBtn" class="dropdown-item" role="menuitem">Export JSON</button>
           <button type="button" id="exportCsvBtn" class="dropdown-item" role="menuitem">Export CSV (Wordclouds.com)</button>
@@ -68,21 +69,11 @@
       <section id="cloudSection" class="col-lg-5" aria-labelledby="cloudTitle">
         <div class="card shadow-sm">
           <div class="card-body">
-            <h2 id="cloudTitle" class="h5">Tag-Wolke</h2>
+            <h2 id="cloudTitle" class="h5">Wort-Wolke</h2>
             <div id="cloudWrap" class="mb-3">
               <canvas id="cloud" class="w-100"></canvas>
               <ul id="cloudFallback" class="list-group d-none"></ul>
             </div>
-            <details id="tagsDetails" class="border rounded-3">
-              <summary class="px-3 py-2 fw-semibold">Tags und Personen</summary>
-              <div class="p-3">
-                <div id="tagList" class="list-group mb-3"></div>
-                <div id="namesWrap">
-                  <h3 id="namesTitle" class="h6 m-0">Wähle einen Tag, um die Namen zu sehen</h3>
-                  <ul id="namesList" class="list-group list-group-flush mt-2"></ul>
-                </div>
-              </div>
-            </details>
           </div>
         </div>
       </section>
@@ -128,6 +119,56 @@
             </div>
             <div id="personTags" class="d-flex flex-wrap gap-2"></div>
             <div id="personNotice" class="alert alert-info py-2 mt-3 mb-0 d-none" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wordsPanel" class="position-fixed top-0 start-0 w-100 h-100 bg-white d-none flex-column" role="dialog" aria-modal="true" aria-labelledby="wordsTitle" hidden>
+    <div class="border-bottom p-3 d-flex align-items-center gap-2">
+      <h3 id="wordsTitle" class="h6 m-0">Wörter</h3>
+      <button id="wordsClose" class="btn btn-outline-secondary ms-auto" type="button" aria-label="Schließen">Schließen</button>
+    </div>
+    <div class="flex-grow-1 overflow-auto">
+      <div class="container-fluid py-3">
+        <ul id="wordsTabs" class="nav nav-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" type="button" role="tab" aria-selected="true" aria-controls="wordsOverview" data-tab="wordsOverview">Wörter und Personen</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" role="tab" aria-selected="false" aria-controls="wordsManage" data-tab="wordsManage">Bearbeiten</button>
+          </li>
+        </ul>
+        <div class="tab-content pt-3">
+          <div id="wordsOverview" class="tab-pane fade show active" role="tabpanel">
+            <div class="row g-3">
+              <div class="col-lg-5">
+                <div id="tagList" class="list-group"></div>
+              </div>
+              <div class="col-lg-7">
+                <div id="namesWrap">
+                  <h3 id="namesTitle" class="h6 m-0">Wähle einen Tag, um die Namen zu sehen</h3>
+                  <ul id="namesList" class="list-group list-group-flush mt-2"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="wordsManage" class="tab-pane fade" role="tabpanel">
+            <div class="row g-3">
+              <div class="col-lg-5">
+                <label for="catalogInput" class="form-label">Neues Wort</label>
+                <div class="input-group">
+                  <input id="catalogInput" type="text" class="form-control" autocomplete="off" placeholder="Wort hinzufügen" />
+                  <button id="catalogAddBtn" class="btn btn-outline-primary" type="button">Hinzufügen</button>
+                </div>
+                <div class="form-text">Verwaltet alle Wörter im Katalog.</div>
+              </div>
+              <div class="col-lg-7">
+                <h4 class="h6">Wörter im Katalog</h4>
+                <div id="catalogList" class="list-group"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

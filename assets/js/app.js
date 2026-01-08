@@ -5,10 +5,12 @@ import {
   parseCatalog,
   addToCatalog,
   removeFromCatalog,
+  renameCatalogItem,
   aggregateEntries,
   getPersonNames,
   getPersonTags,
   updatePersonEntries,
+  updateEntriesForTag,
   buildEntry,
   buildExportFilename,
   buildWordcloudFilename,
@@ -20,6 +22,7 @@ import {
   setMenuOpen,
   setIndexOpen,
   setPersonsOpen,
+  setWordsOpen,
   setNotice,
   setNoticeWithLink,
   setPersonNotice,
@@ -31,7 +34,8 @@ import {
   renderCloud,
   renderPersonsSelect,
   renderPersonTags,
-  renderPersonsCatalog
+  renderPersonsCatalog,
+  renderCatalogList
 } from "./ui.js";
 import { debounce } from "./utils.js";
 
@@ -88,6 +92,16 @@ function bindEvents(){
   });
   refs.indexColumns.addEventListener("click", onIndexClick);
 
+  refs.wordsBtn.addEventListener("click", openWords);
+  refs.wordsClose.addEventListener("click", closeWords);
+  refs.wordsPanel.addEventListener("click", (event)=>{
+    if(event.target === refs.wordsPanel) closeWords();
+  });
+  refs.wordsTabs.addEventListener("click", onWordsTabClick);
+  refs.catalogAddBtn.addEventListener("click", onCatalogAdd);
+  refs.catalogInput.addEventListener("keydown", onCatalogInputKeydown);
+  refs.catalogList.addEventListener("click", onCatalogListClick);
+
   refs.personsBtn.addEventListener("click", openPersons);
   refs.personsClose.addEventListener("click", closePersons);
   refs.personsPanel.addEventListener("click", (event)=>{
@@ -101,6 +115,10 @@ function bindEvents(){
 
   document.addEventListener("keydown", (event)=>{
     if(event.key !== "Escape") return;
+    if(!refs.wordsPanel.classList.contains("d-none")){
+      closeWords();
+      return;
+    }
     if(!refs.personsPanel.classList.contains("d-none")){
       closePersons();
       return;
@@ -148,6 +166,19 @@ function openIndex(){
 function closeIndex(){
   setIndexOpen(refs, false);
   refs.openIndexBtn.focus();
+}
+
+function openWords(){
+  setMenuOpen(refs, false);
+  setWordsOpen(refs, true);
+  renderAllSummaries();
+  setWordsTab("wordsOverview");
+  refs.wordsClose.focus();
+}
+
+function closeWords(){
+  setWordsOpen(refs, false);
+  refs.menuToggle.focus();
 }
 
 function openPersons(){
@@ -211,6 +242,7 @@ function onAddEnter(event){
     if(!refs.personsPanel.classList.contains("d-none")){
       renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
     }
+    renderCatalogList(refs, nextCatalog);
   }
 
   tryAddTag(raw);
@@ -312,6 +344,118 @@ function onIndexClick(event){
   }
 }
 
+function onWordsTabClick(event){
+  const btn = event.target.closest("[data-tab]");
+  if(!btn) return;
+  setWordsTab(btn.dataset.tab);
+}
+
+function setWordsTab(tabId){
+  const buttons = refs.wordsTabs.querySelectorAll("[data-tab]");
+  const panels = refs.wordsPanel.querySelectorAll(".tab-pane");
+  for(const button of buttons){
+    const isActive = button.dataset.tab === tabId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  }
+  for(const panel of panels){
+    const isActive = panel.id === tabId;
+    panel.classList.toggle("show", isActive);
+    panel.classList.toggle("active", isActive);
+  }
+}
+
+function onCatalogInputKeydown(event){
+  if(event.key !== "Enter") return;
+  event.preventDefault();
+  onCatalogAdd();
+}
+
+function onCatalogAdd(){
+  const raw = refs.catalogInput.value.trim();
+  if(!raw) return;
+  const catalog = getCatalogList();
+  const nextCatalog = addToCatalog(catalog, raw);
+  if(nextCatalog !== catalog){
+    updateCatalog(nextCatalog);
+    renderAllSummaries();
+    if(!refs.indexPanel.classList.contains("d-none")){
+      renderIndex(refs, nextCatalog, currentSelection);
+    }
+    if(!refs.personsPanel.classList.contains("d-none")){
+      renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
+    }
+  }
+  refs.catalogInput.value = "";
+  refs.catalogInput.focus();
+}
+
+function onCatalogListClick(event){
+  const btn = event.target.closest("[data-action]");
+  if(!btn) return;
+  const tag = btn.dataset.tag || "";
+  if(btn.dataset.action === "remove-catalog"){
+    const catalog = getCatalogList();
+    const nextCatalog = removeFromCatalog(catalog, tag);
+    if(nextCatalog !== catalog){
+      updateCatalog(nextCatalog);
+      renderAllSummaries();
+      if(!refs.indexPanel.classList.contains("d-none")){
+        renderIndex(refs, nextCatalog, currentSelection);
+      }
+      if(!refs.personsPanel.classList.contains("d-none")){
+        renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
+      }
+      setNotice(refs, `Tag "${tag}" entfernt.`);
+    }
+    return;
+  }
+
+  if(btn.dataset.action === "edit-catalog"){
+    editCatalogItem(tag);
+  }
+}
+
+function editCatalogItem(tag){
+  const nextValue = window.prompt("Wort bearbeiten:", tag);
+  if(nextValue === null) return;
+  const catalog = getCatalogList();
+  const nextCatalog = renameCatalogItem(catalog, tag, nextValue);
+  if(nextCatalog === catalog){
+    setNotice(refs, "Keine Änderung vorgenommen.");
+    return;
+  }
+  state.entries = updateEntriesForTag(state.entries, tag, nextValue);
+  updateCatalog(nextCatalog);
+  saveState(state);
+  updateSelectionsForTag(tag, nextValue);
+  renderAllSummaries();
+  if(!refs.indexPanel.classList.contains("d-none")){
+    renderIndex(refs, nextCatalog, currentSelection);
+  }
+  if(!refs.personsPanel.classList.contains("d-none")){
+    renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
+  }
+  setNotice(refs, `Tag "${tag}" aktualisiert.`);
+}
+
+function updateSelectionsForTag(currentTag, nextTag){
+  const oldKey = normalizeTag(currentTag).toLowerCase();
+  const nextClean = normalizeTag(nextTag);
+  if(!oldKey || !nextClean) return;
+  const nextKey = nextClean.toLowerCase();
+  if(currentSelection.has(oldKey)){
+    currentSelection.delete(oldKey);
+    currentSelection.set(nextKey, nextClean);
+    renderSelectedTags(refs, currentSelection);
+  }
+  if(currentPerson.tags.has(oldKey)){
+    currentPerson.tags.delete(oldKey);
+    currentPerson.tags.set(nextKey, nextClean);
+    renderPersonTags(refs, currentPerson.tags);
+  }
+}
+
 function showNamesFor(lowerKey, display){
   const aggregates = aggregateEntries(state.entries);
   const list = aggregates.names.get(lowerKey) || [];
@@ -328,6 +472,7 @@ function renderAllSummaries(){
   items.sort((a,b)=> b.count - a.count || a.display.localeCompare(b.display, "de", { sensitivity: "base" }));
 
   renderTagList(refs, items);
+  renderCatalogList(refs, getCatalogList());
 
   const cloudList = Array.from(aggregates.counts.entries()).map(([key, count])=>[
     aggregates.displayMap.get(key) || key,

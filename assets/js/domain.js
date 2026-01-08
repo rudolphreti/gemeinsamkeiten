@@ -36,6 +36,26 @@ function removeFromCatalog(list, display){
   return next.length === list.length ? list : next;
 }
 
+function renameCatalogItem(list, current, next){
+  const cleanCurrent = normalizeTag(current);
+  const cleanNext = normalizeTag(next);
+  if(!cleanCurrent || !cleanNext) return list;
+  const currentKey = cleanCurrent.toLowerCase();
+  const nextKey = cleanNext.toLowerCase();
+  const exists = list.some((item)=> normalizeTag(item).toLowerCase() === nextKey);
+  if(exists && currentKey !== nextKey) return list;
+  let changed = false;
+  const updated = list.map((item)=>{
+    const itemKey = normalizeTag(item).toLowerCase();
+    if(itemKey === currentKey){
+      changed = true;
+      return cleanNext;
+    }
+    return item;
+  });
+  return changed ? sortCatalog(updated) : list;
+}
+
 function aggregateEntries(entries){
   const counts = new Map();
   const displayMap = new Map();
@@ -113,6 +133,39 @@ function updatePersonEntries(entries, oldName, newName, tags){
   });
 }
 
+function updateEntriesForTag(entries, oldTag, newTag){
+  const current = normalizeTag(oldTag);
+  const next = normalizeTag(newTag);
+  if(!current || !next) return entries;
+  const oldKey = current.toLowerCase();
+  const nextKey = next.toLowerCase();
+
+  return entries.map((entry)=>{
+    if(typeof entry?.name !== "string" || typeof entry?.tags !== "string") return entry;
+    const tags = entry.tags
+      .split(",")
+      .map((raw)=> normalizeTag(raw))
+      .filter(Boolean);
+    if(!tags.length) return entry;
+    let changed = false;
+    const nextTags = [];
+    const seen = new Set();
+    for(const tag of tags){
+      const key = tag.toLowerCase();
+      if(key === oldKey){
+        if(!seen.has(nextKey)) nextTags.push(next);
+        seen.add(nextKey);
+        changed = true;
+      }else if(!seen.has(key)){
+        nextTags.push(tag);
+        seen.add(key);
+      }
+    }
+    if(!changed) return entry;
+    return { ...entry, tags: nextTags.join(",") };
+  });
+}
+
 function buildEntry(name, selectedTags){
   return { name, tags: selectedTags.join(",") };
 }
@@ -176,10 +229,12 @@ export {
   sortCatalog,
   addToCatalog,
   removeFromCatalog,
+  renameCatalogItem,
   aggregateEntries,
   getPersonNames,
   getPersonTags,
   updatePersonEntries,
+  updateEntriesForTag,
   buildEntry,
   buildExportFilename,
   buildWordcloudFilename,
