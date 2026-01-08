@@ -412,17 +412,21 @@ function renderPersonTags(refs, tags){
 
 function renderPersonsCatalog(refs, catalog, selectedTags){
   refs.personsCatalog.replaceChildren();
-  for(const tag of catalog){
+  const availableTags = catalog.filter((tag)=>!selectedTags.has(tag.toLowerCase()));
+  if(!availableTags.length){
+    const text = document.createElement("span");
+    text.className = "text-muted";
+    text.textContent = "Keine weiteren Tags verfügbar.";
+    refs.personsCatalog.appendChild(text);
+    return;
+  }
+  for(const tag of availableTags){
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn btn-sm btn-outline-secondary";
     btn.textContent = tag;
     btn.dataset.action = "add-person-tag";
     btn.dataset.tag = tag;
-    if(selectedTags.has(tag.toLowerCase())){
-      btn.classList.add("active");
-      btn.disabled = true;
-    }
     refs.personsCatalog.appendChild(btn);
   }
 }
