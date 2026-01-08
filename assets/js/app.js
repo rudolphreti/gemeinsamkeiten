@@ -11,6 +11,8 @@ import {
   updatePersonEntries,
   buildEntry,
   buildExportFilename,
+  buildWordcloudFilename,
+  buildWordcloudCsv,
   buildReportText
 } from "./domain.js";
 import {
@@ -60,6 +62,7 @@ function bindEvents(){
   refs.selectedTagsBox.addEventListener("click", onSelectedTagsClick);
   refs.tagList.addEventListener("click", onTagListClick);
   refs.exportBtn.addEventListener("click", onExport);
+  refs.exportCsvBtn.addEventListener("click", onExportCsv);
   refs.importBtn.addEventListener("click", ()=> refs.importFile.click());
   refs.importFile.addEventListener("change", onImport);
   refs.reportBtn.addEventListener("click", onReport);
@@ -337,6 +340,25 @@ function onExport(){
   const filename = buildExportFilename(state.context);
   const json = JSON.stringify(state, null, 2);
   const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  setNoticeWithLink(
+    refs,
+    "Datei bereit: ",
+    { href: url, text: filename, download: filename },
+    " (Link gültig 60s)."
+  );
+
+  setTimeout(()=>{
+    try{ URL.revokeObjectURL(url); }catch{}
+  }, 60000);
+}
+
+function onExportCsv(){
+  const aggregates = aggregateEntries(state.entries);
+  const filename = buildWordcloudFilename(state.context);
+  const csv = buildWordcloudCsv(aggregates);
+  const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
 
   setNoticeWithLink(

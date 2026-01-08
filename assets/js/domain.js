@@ -117,13 +117,37 @@ function buildEntry(name, selectedTags){
   return { name, tags: selectedTags.join(",") };
 }
 
-function buildExportFilename(context){
+function buildSafeTopic(context){
   const topic = normalizeTag(context) || "OhneTitel";
-  const safe = topic
+  return topic
     .replace(/[^\p{L}\p{N}_-]+/gu, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function buildExportFilename(context){
+  const safe = buildSafeTopic(context);
   return `Gemeinsamkeiten-${safe}.json`;
+}
+
+function buildWordcloudFilename(context){
+  const safe = buildSafeTopic(context);
+  return `Gemeinsamkeiten-${safe}-wordclouds.csv`;
+}
+
+function buildWordcloudCsv(aggregates){
+  const items = Array.from(aggregates.counts.entries()).map(([key, count])=>({
+    word: aggregates.displayMap.get(key) || key,
+    count
+  }));
+  items.sort((a,b)=> b.count - a.count || a.word.localeCompare(b.word, "de", { sensitivity: "base" }));
+
+  const escapeValue = (value)=> String(value).replace(/"/g, "\"\"");
+  const lines = [`"weight";"word";"color";"url"`];
+  for(const item of items){
+    lines.push(`"${escapeValue(item.count)}";"${escapeValue(item.word)}";"";""`);
+  }
+  return lines.join("\n");
 }
 
 function buildReportText(state, aggregates){
@@ -158,5 +182,7 @@ export {
   updatePersonEntries,
   buildEntry,
   buildExportFilename,
+  buildWordcloudFilename,
+  buildWordcloudCsv,
   buildReportText
 };

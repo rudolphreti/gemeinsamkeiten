@@ -13,6 +13,7 @@
     importBtn: document.getElementById("importBtn"),
     importFile: document.getElementById("importFile"),
     exportBtn: document.getElementById("exportBtn"),
+    exportCsvBtn: document.getElementById("exportCsvBtn"),
     reportBtn: document.getElementById("reportBtn"),
     resetBtn: document.getElementById("resetBtn"),
     personsBtn: document.getElementById("personsBtn"),
