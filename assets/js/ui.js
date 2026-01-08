@@ -16,6 +16,13 @@
     exportCsvBtn: document.getElementById("exportCsvBtn"),
     reportBtn: document.getElementById("reportBtn"),
     resetBtn: document.getElementById("resetBtn"),
+    wordsBtn: document.getElementById("wordsBtn"),
+    wordsPanel: document.getElementById("wordsPanel"),
+    wordsClose: document.getElementById("wordsClose"),
+    wordsTabs: document.getElementById("wordsTabs"),
+    catalogInput: document.getElementById("catalogInput"),
+    catalogAddBtn: document.getElementById("catalogAddBtn"),
+    catalogList: document.getElementById("catalogList"),
     personsBtn: document.getElementById("personsBtn"),
     menuToggle: document.getElementById("menuToggle"),
     menuPanel: document.getElementById("menuPanel"),
@@ -52,6 +59,13 @@ function setPersonsOpen(refs, open){
   refs.personsPanel.classList.toggle("d-none", !open);
   refs.personsPanel.classList.toggle("d-flex", open);
   refs.personsBtn.setAttribute("aria-expanded", String(open));
+}
+
+function setWordsOpen(refs, open){
+  refs.wordsPanel.hidden = !open;
+  refs.wordsPanel.classList.toggle("d-none", !open);
+  refs.wordsPanel.classList.toggle("d-flex", open);
+  refs.wordsBtn.setAttribute("aria-expanded", String(open));
 }
 
 function setNotice(refs, text){
@@ -200,6 +214,36 @@ function renderNamesList(refs, display, names){
   refs.namesTitle.focus();
 }
 
+function renderCatalogList(refs, items){
+  refs.catalogList.replaceChildren();
+  const list = items.slice().sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
+  if(!list.length){
+    const empty = document.createElement("div");
+    empty.className = "list-group-item text-muted";
+    empty.textContent = "Keine Wörter vorhanden.";
+    refs.catalogList.appendChild(empty);
+    return;
+  }
+
+  for(const word of list){
+    const row = document.createElement("div");
+    row.className = "list-group-item d-flex justify-content-between align-items-center";
+
+    const label = document.createElement("span");
+    label.textContent = word;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-sm btn-outline-danger";
+    btn.textContent = "Entfernen";
+    btn.dataset.action = "remove-catalog";
+    btn.dataset.tag = word;
+
+    row.append(label, btn);
+    refs.catalogList.appendChild(row);
+  }
+}
+
 function renderCloud(refs, list){
   const wrap = refs.cloudCanvas.parentElement;
   const width = Math.max(360, wrap.clientWidth);
@@ -344,5 +388,7 @@ export {
   renderCloud,
   renderPersonsSelect,
   renderPersonTags,
-  renderPersonsCatalog
+  renderPersonsCatalog,
+  renderCatalogList,
+  setWordsOpen
 };
