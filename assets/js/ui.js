@@ -136,6 +136,7 @@ function renderSelectedTags(refs, selection){
 }
 
 function renderIndex(refs, catalog, selection){
+  const previousScrollTop = refs.indexColumns.scrollTop;
   refs.indexColumns.replaceChildren();
   const items = Array.from(new Set(catalog.map((tag)=> String(tag))));
   items.sort((a,b)=> a.localeCompare(b, "de", { sensitivity: "base" }));
@@ -177,6 +178,10 @@ function renderIndex(refs, catalog, selection){
     section.appendChild(ul);
     refs.indexColumns.appendChild(section);
   }
+  requestAnimationFrame(()=>{
+    const maxScrollTop = Math.max(0, refs.indexColumns.scrollHeight - refs.indexColumns.clientHeight);
+    refs.indexColumns.scrollTop = Math.min(previousScrollTop, maxScrollTop);
+  });
 }
 
 function renderTagList(refs, items){
