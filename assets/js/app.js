@@ -44,6 +44,7 @@ let state = loadState();
 let currentSelection = new Map();
 let currentPerson = { original: "", name: "", tags: new Map() };
 let editingCatalog = { tagKey: "", value: "" };
+let aggregatesCache = { entriesRef: null, aggregates: null };
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -81,7 +82,8 @@ function bindEvents(){
   refs.importFile.addEventListener("change", onImport);
   refs.reportBtn.addEventListener("click", onReport);
   refs.resetBtn.addEventListener("click", onReset);
-  window.addEventListener("resize", debounce(renderAllSummaries, 200));
+  refs.cloudRefreshBtn.addEventListener("click", renderWordCloud);
+  window.addEventListener("resize", debounce(renderWordCloud, 200));
 
   refs.menuToggle.addEventListener("click", toggleMenu);
 
@@ -300,6 +302,7 @@ function onSave(event){
 
   const tags = Array.from(currentSelection.values());
   state.entries.push(buildEntry(name, tags));
+  markEntriesChanged();
   saveState(state);
   clearForm();
   renderAllSummaries();
@@ -456,6 +459,7 @@ function saveCatalogEdit(tag){
     return;
   }
   state.entries = updateEntriesForTag(state.entries, tag, nextValue);
+  markEntriesChanged();
   updateCatalog(nextCatalog);
   saveState(state);
   updateSelectionsForTag(tag, nextValue);
@@ -496,13 +500,13 @@ function updateSelectionsForTag(currentTag, nextTag){
 }
 
 function showNamesFor(lowerKey, display){
-  const aggregates = aggregateEntries(state.entries);
+  const aggregates = getAggregates();
   const list = aggregates.names.get(lowerKey) || [];
   renderNamesList(refs, display, list);
 }
 
 function renderAllSummaries(){
-  const aggregates = aggregateEntries(state.entries);
+  const aggregates = getAggregates();
   const items = Array.from(aggregates.counts.entries()).map(([key, count])=>({
     lower: key,
     count,
@@ -513,11 +517,29 @@ function renderAllSummaries(){
   renderTagList(refs, items);
   renderCatalogList(refs, getCatalogList(), editingCatalog);
 
+  renderWordCloud();
+}
+
+function renderWordCloud(){
+  const aggregates = getAggregates();
   const cloudList = Array.from(aggregates.counts.entries()).map(([key, count])=>[
     aggregates.displayMap.get(key) || key,
     count
   ]);
   renderCloud(refs, cloudList);
+}
+
+function getAggregates(){
+  if(aggregatesCache.entriesRef === state.entries && aggregatesCache.aggregates){
+    return aggregatesCache.aggregates;
+  }
+  const aggregates = aggregateEntries(state.entries);
+  aggregatesCache = { entriesRef: state.entries, aggregates };
+  return aggregates;
+}
+
+function markEntriesChanged(){
+  aggregatesCache = { entriesRef: null, aggregates: null };
 }
 
 function onExport(){
@@ -539,7 +561,7 @@ function onExport(){
 }
 
 function onExportCsv(){
-  const aggregates = aggregateEntries(state.entries);
+  const aggregates = getAggregates();
   const filename = buildWordcloudFilename(state.context);
   const csv = buildWordcloudCsv(aggregates);
   const blob = new Blob([csv], { type: "text/csv" });
@@ -577,6 +599,7 @@ function onImport(event){
         catalog: obj.catalog,
         context: typeof obj.context === "string" ? obj.context : ""
       };
+      markEntriesChanged();
       saveState(state);
       clearForm();
       renderIndex(refs, getCatalogList(), currentSelection);
@@ -599,7 +622,7 @@ function onImport(event){
 }
 
 function onReport(){
-  const aggregates = aggregateEntries(state.entries);
+  const aggregates = getAggregates();
   const text = buildReportText(state, aggregates);
   try{
     navigator.clipboard?.writeText(text);
@@ -612,6 +635,7 @@ function onReport(){
 function onReset(){
   if(!confirm("Möchtest du wirklich alle Daten löschen?")) return;
   state = resetState();
+  markEntriesChanged();
   clearForm();
   renderIndex(refs, getCatalogList(), currentSelection);
   renderAllSummaries();
@@ -676,6 +700,7 @@ function onPersonSave(){
   }
   const tags = Array.from(currentPerson.tags.values());
   state.entries = updatePersonEntries(state.entries, currentPerson.original, nextName, tags);
+  markEntriesChanged();
   saveState(state);
   renderAllSummaries();
   setPersonNotice(refs, "Änderungen gespeichert.");
