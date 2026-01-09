@@ -293,7 +293,7 @@ function onSave(event){
     return;
   }
   if(currentSelection.size < 1){
-    setNotice(refs, "Mindestens 1 Tag wählen.");
+    setNotice(refs, "Mindestens ein Wort wählen.");
     refs.addInput.focus();
     return;
   }
@@ -410,7 +410,7 @@ function onCatalogListClick(event){
       if(!refs.personsPanel.classList.contains("d-none")){
         renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
       }
-      setNotice(refs, `Tag "${tag}" entfernt.`);
+      setNotice(refs, `Wort "${tag}" entfernt.`);
     }
     return;
   }
@@ -467,7 +467,7 @@ function saveCatalogEdit(tag){
   if(!refs.personsPanel.classList.contains("d-none")){
     renderPersonsCatalog(refs, nextCatalog, currentPerson.tags);
   }
-  setNotice(refs, `Tag "${tag}" aktualisiert.`);
+  setNotice(refs, `Wort "${tag}" aktualisiert.`);
 }
 
 function cancelCatalogEdit(){
@@ -615,7 +615,7 @@ function onReset(){
   clearForm();
   renderIndex(refs, getCatalogList(), currentSelection);
   renderAllSummaries();
-  refs.namesTitle.textContent = "Wähle einen Tag, um die Namen zu sehen";
+  refs.namesTitle.textContent = "Wähle ein Wort, um die Namen zu sehen";
   refs.namesList.replaceChildren();
   refreshPersonsOverlay("");
   setNotice(refs, "Zurückgesetzt.");
