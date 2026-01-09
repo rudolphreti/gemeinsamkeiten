@@ -101,7 +101,10 @@
       <section id="cloudSection" class="col-lg-5" aria-labelledby="cloudTitle">
         <div class="card shadow-sm">
           <div class="card-body">
-            <h2 id="cloudTitle" class="h5">Wort-Wolke</h2>
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <h2 id="cloudTitle" class="h5 mb-0">Wort-Wolke</h2>
+              <button id="cloudRefreshBtn" class="btn btn-sm btn-outline-secondary" type="button">Wort-Wolke aktualisieren</button>
+            </div>
             <div id="cloudWrap" class="mb-3">
               <canvas id="cloud" class="w-100"></canvas>
               <ul id="cloudFallback" class="list-group d-none"></ul>

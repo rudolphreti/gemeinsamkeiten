@@ -10,6 +10,7 @@
     namesList: document.getElementById("namesList"),
     cloudCanvas: document.getElementById("cloud"),
     cloudFallback: document.getElementById("cloudFallback"),
+    cloudRefreshBtn: document.getElementById("cloudRefreshBtn"),
     importBtn: document.getElementById("importBtn"),
     importFile: document.getElementById("importFile"),
     exportBtn: document.getElementById("exportBtn"),

@@ -82,6 +82,7 @@ function bindEvents(){
   refs.importFile.addEventListener("change", onImport);
   refs.reportBtn.addEventListener("click", onReport);
   refs.resetBtn.addEventListener("click", onReset);
+  refs.cloudRefreshBtn.addEventListener("click", renderWordCloud);
   window.addEventListener("resize", debounce(renderWordCloud, 200));
 
   refs.menuToggle.addEventListener("click", toggleMenu);
@@ -178,7 +179,7 @@ function closeIndex(){
 function openWords(){
   setMenuOpen(refs, false);
   setWordsOpen(refs, true);
-  renderAllSummaries({ forceCloud: true });
+  renderAllSummaries();
   setWordsTab("wordsOverview");
   refs.wordsClose.focus();
 }
@@ -504,7 +505,7 @@ function showNamesFor(lowerKey, display){
   renderNamesList(refs, display, list);
 }
 
-function renderAllSummaries(options = {}){
+function renderAllSummaries(){
   const aggregates = getAggregates();
   const items = Array.from(aggregates.counts.entries()).map(([key, count])=>({
     lower: key,
@@ -516,23 +517,16 @@ function renderAllSummaries(options = {}){
   renderTagList(refs, items);
   renderCatalogList(refs, getCatalogList(), editingCatalog);
 
-  if(options.forceCloud || isWordsOpen()){
-    renderWordCloud();
-  }
+  renderWordCloud();
 }
 
 function renderWordCloud(){
-  if(!isWordsOpen()) return;
   const aggregates = getAggregates();
   const cloudList = Array.from(aggregates.counts.entries()).map(([key, count])=>[
     aggregates.displayMap.get(key) || key,
     count
   ]);
   renderCloud(refs, cloudList);
-}
-
-function isWordsOpen(){
-  return !refs.wordsPanel.classList.contains("d-none");
 }
 
 function getAggregates(){
